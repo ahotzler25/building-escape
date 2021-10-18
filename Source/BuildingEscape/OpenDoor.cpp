@@ -21,7 +21,7 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
-	TargetYaw += InitialYaw;
+	OpenAngle += InitialYaw;
 
 	if (!PressurePlate)
 	{
@@ -54,15 +54,15 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("DLO: %f"), DoorLastOpened);
-	UE_LOG(LogTemp, Error, TEXT("Close Door Time: %f"), CloseDoorTime);
+	// UE_LOG(LogTemp, Warning, TEXT("DLO: %f"), DoorLastOpened);
+	// UE_LOG(LogTemp, Error, TEXT("Close Door Time: %f"), CloseDoorTime);
 }
 
 void UOpenDoor::OpenDoor(float DeltaTime)
 {
 	// roll = x; pitch = y; yaw = z
 	// Set Actor Rotation
-	CurrentYaw = FMath::Lerp(CurrentYaw, TargetYaw, DeltaTime * 0.75f);
+	CurrentYaw = FMath::Lerp(CurrentYaw, OpenAngle, DeltaTime * DoorOpenSpeed);
 	FRotator DoorRotation = GetOwner()->GetActorRotation();
 	DoorRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(DoorRotation);
@@ -70,7 +70,7 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 
 void UOpenDoor::CloseDoor(float DeltaTime)
 {
-	CurrentYaw = FMath::Lerp(CurrentYaw, InitialYaw, DeltaTime * 1.25f);
+	CurrentYaw = FMath::Lerp(CurrentYaw, InitialYaw, DeltaTime * DoorCloseSpeed);
 	FRotator DoorRotation = GetOwner()->GetActorRotation();
 	DoorRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(DoorRotation);
@@ -78,13 +78,10 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 
 
 
-
-
-
 	// Linear Interpolation
-	// OpenDoor.Yaw = FMath::FInterpConstantTo(CurrentYaw, TargetYaw, DeltaTime, 45);
+	// OpenDoor.Yaw = FMath::FInterpConstantTo(CurrentYaw, OpenAngle, DeltaTime, 45);
 
-	// OpenDoor.Yaw = FMath::FInterpTo(CurrentYaw, TargetYaw, DeltaTime, 2);
+	// OpenDoor.Yaw = FMath::FInterpTo(CurrentYaw, OpenAngle, DeltaTime, 2);
 	// GetOwner()->SetActorRotation(OpenDoor);
 
 	// FRotator OpenDoor = {0.f, 90.f, 0.f};
