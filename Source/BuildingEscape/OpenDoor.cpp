@@ -76,13 +76,19 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 	GetOwner()->SetActorRotation(DoorRotation);
 }
 
+/*
+	Grabbing System
 
+	If (player is in radius of interactable object)
+	press e to grab (if not too heavy)
 
-	// Linear Interpolation
-	// OpenDoor.Yaw = FMath::FInterpConstantTo(CurrentYaw, OpenAngle, DeltaTime, 45);
+	if (object weighs as much as player)
+	then grab actor
+	walk to pressure plate
+	drop on pressure plate
+	door opens
 
-	// OpenDoor.Yaw = FMath::FInterpTo(CurrentYaw, OpenAngle, DeltaTime, 2);
-	// GetOwner()->SetActorRotation(OpenDoor);
-
-	// FRotator OpenDoor = {0.f, 90.f, 0.f};
-	// GetOwner()->SetActorRotation(OpenDoor);
+	if (object does not weigh as much as player)
+	door does not open
+	more complicated version could show pressure plate slightly lowering, but not entirely
+*/
