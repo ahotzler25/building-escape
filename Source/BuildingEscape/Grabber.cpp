@@ -1,8 +1,8 @@
 // Copyright: Andy Hotzler, 2021
 
-
-#include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "Grabber.h" // This should be bottom #include at all times (why?)
 
 #define OUT
@@ -40,10 +40,34 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		OUT PlayerViewpointRotation
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT("Location: %s || Rotation: %s"), 
-		*PlayerViewpointLocation.ToString(), 
-		*PlayerViewpointRotation.ToString()
-	);
-	
-}
+	FVector LineTraceEnd = PlayerViewpointLocation + PlayerViewpointRotation.Vector() * Reach;
 
+	DrawDebugLine(
+		GetWorld(),
+		PlayerViewpointLocation, 
+		LineTraceEnd,
+		FColor(0, 255, 0),
+		false,
+		0.f,
+		0,
+		5.f
+	);
+
+	// Ray-cast out to a certain distance
+	FHitResult Hit;
+	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
+
+
+	GetWorld()->LineTraceSingleByObjectType(
+		Hit,
+		PlayerViewpointLocation,
+		LineTraceEnd,
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		TraceParams
+	);
+
+	// Log out to test
+	AActor* ActorHit = Hit.GetActor();
+
+	if (ActorHit) UE_LOG(LogTemp, Warning, TEXT("Object %s was hit!"), *ActorHit->GetName());
+}
