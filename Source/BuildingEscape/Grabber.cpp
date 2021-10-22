@@ -47,30 +47,68 @@ void UGrabber::SetupInputComponent()
 	}
 }
 
+void UGrabber::Grab()
+{
+	// When E key pressed, this function is called
+	FHitResult HitResult = GetFirstPhysicsBodyInReach();
+	UE_LOG(LogTemp, Warning, TEXT("Grab button was pressed."));
+
+	FVector PlayerViewpointLocation;
+	FRotator PlayerViewpointRotation;
+
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewpointLocation,
+		OUT PlayerViewpointRotation
+	);
+
+	FVector LineTraceEnd = PlayerViewpointLocation + PlayerViewpointRotation.Vector() * Reach;
+
+	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
+
+	// Attempt to grab any actors with a physics body collision channel set
+	if (HitResult.GetActor())
+	{
+		PhysicsHandle->GrabComponentAtLocation(
+			ComponentToGrab,
+			NAME_None,
+			LineTraceEnd
+		);
+	}
+
+	// If (we hit something then attach physics handle)
+
+}
+
+void UGrabber::Release()
+{
+	// remove/release physics handle
+	PhysicsHandle->ReleaseComponent();
+	
+	UE_LOG(LogTemp, Warning, TEXT("Grab button was released."));
+
+}
+
 // Called every frame
 // This is a 'hot loop'
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// Get player's viewpoint
+	FVector PlayerViewpointLocation;
+	FRotator PlayerViewpointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewpointLocation, 
+		OUT PlayerViewpointRotation
+	);
 
-}
-
-void UGrabber::Grab()
-{
-	// When E key pressed, this function is called
-	GetFirstPhysicsBodyInReach();
-	UE_LOG(LogTemp, Warning, TEXT("Grab button was pressed."));
-
-	// Attempt to grab any actors with a physics body collision channel set
-
-	// If (we hit something then attach physics handle)
-}
-
-void UGrabber::Release()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Grab button was released."));
-
-	// remove/release physics handle
+	FVector LineTraceEnd = PlayerViewpointLocation + PlayerViewpointRotation.Vector() * Reach;
+	
+	// If (physicshandle is attached)
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
+		// release attached component
 }
 
 FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
