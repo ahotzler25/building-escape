@@ -36,5 +36,9 @@ private:
 	void Release();
 	void FindPhysicsHandle();
 	void SetupInputComponent();
-	FHitResult GetFirstPhysicsBodyInReach() const;
+	FHitResult GetFirstPhysicsBodyInReach();
+
+	// Return line trace end to get player's reach
+	FVector GetPlayerReach() const;
+	FVector GetPlayerPosition() const;
 };
