@@ -13,16 +13,19 @@ UGrabber::UGrabber()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
-
 
 // Called when the game starts
 void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FindPhysicsHandle();
+	SetupInputComponent();
+}
+
+void UGrabber::FindPhysicsHandle()
+{
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	if (PhysicsHandle)
 	{
@@ -32,25 +35,46 @@ void UGrabber::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("No physics handle component found on %s."), *GetOwner()->GetActorLabel());
 	}
+}
 
+void UGrabber::SetupInputComponent()
+{
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Input component found on %s"), *GetOwner()->GetActorLabel());
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No input component found on %s"), *GetOwner()->GetActorLabel());
+		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
 }
 
-
 // Called every frame
+// This is a 'hot loop'
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+}
+
+void UGrabber::Grab()
+{
+	// When E key pressed, this function is called
+	GetFirstPhysicsBodyInReach();
+	UE_LOG(LogTemp, Warning, TEXT("Grab button was pressed."));
+
+	// Attempt to grab any actors with a physics body collision channel set
+
+	// If (we hit something then attach physics handle)
+}
+
+void UGrabber::Release()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grab button was released."));
+
+	// remove/release physics handle
+}
+
+FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
+{
 	// Get player's viewpoint
 	FVector PlayerViewpointLocation;
 	FRotator PlayerViewpointRotation;
@@ -61,21 +85,10 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 
 	FVector LineTraceEnd = PlayerViewpointLocation + PlayerViewpointRotation.Vector() * Reach;
 
-	DrawDebugLine(
-		GetWorld(),
-		PlayerViewpointLocation, 
-		LineTraceEnd,
-		FColor(0, 255, 0),
-		false,
-		0.f,
-		0,
-		5.f
-	);
-
-	// Ray-cast out to a certain distance
 	FHitResult Hit;
+	
+	// Ray-cast out to a certain distance
 	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
-
 
 	GetWorld()->LineTraceSingleByObjectType(
 		Hit,
@@ -89,11 +102,6 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	AActor* ActorHit = Hit.GetActor();
 
 	if (ActorHit) UE_LOG(LogTemp, Warning, TEXT("Object %s was hit!"), *ActorHit->GetName());
-	
-}
 
-void UGrabber::Grab()
-{
-	// When E key pressed, this function is called
-	UE_LOG(LogTemp, Warning, TEXT("Grab button was pressed"));
+	return Hit;
 }
