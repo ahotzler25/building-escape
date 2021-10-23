@@ -1,8 +1,9 @@
 // Copyright: Andy Hotzler, 2021
 
 
-#include "Engine/World.h"
 #include "OpenDoor.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
 
@@ -13,7 +14,6 @@ UOpenDoor::UOpenDoor()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 }
-
 
 // Called when the game starts
 void UOpenDoor::BeginPlay()
@@ -31,31 +31,23 @@ void UOpenDoor::BeginPlay()
 	ActorThatOpensDoor = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
-
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-
-	float CloseDoorTime = GetWorld()->GetTimeSeconds();
-
-	if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpensDoor))
+	if (TotalMassOfActors() > MassToOpenDoor)
 	{
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
 	} 
 	else 
 	{	
-		
-		if (CloseDoorTime - DoorLastOpened > DoorCloseDelay)
+		if (GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay)
 		{
 			CloseDoor(DeltaTime);
 		}
 	}
-
-	// UE_LOG(LogTemp, Warning, TEXT("DLO: %f"), DoorLastOpened);
-	// UE_LOG(LogTemp, Error, TEXT("Close Door Time: %f"), CloseDoorTime);
 }
 
 void UOpenDoor::OpenDoor(float DeltaTime)
@@ -76,19 +68,21 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 	GetOwner()->SetActorRotation(DoorRotation);
 }
 
-/*
-	Grabbing System
+float UOpenDoor::TotalMassOfActors() const
+{
+	float TotalMass = 0.f;
 
-	If (player is in radius of interactable object)
-	press e to grab (if not too heavy)
+	// Find all overlapping actors
+	TArray<AActor*> OverlappingActors;
+	PressurePlate->GetOverlappingActors(OUT OverlappingActors);
 
-	if (object weighs as much as player)
-	then grab actor
-	walk to pressure plate
-	drop on pressure plate
-	door opens
+	// Get mass from all actors
+	for (AActor* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
 
-	if (object does not weigh as much as player)
-	door does not open
-	more complicated version could show pressure plate slightly lowering, but not entirely
-*/
+	UE_LOG(LogTemp, Warning, TEXT("Total mass: %f"), TotalMass);
+
+	return TotalMass;
+}
